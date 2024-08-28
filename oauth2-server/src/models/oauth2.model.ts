@@ -21,6 +21,17 @@ const validateScope = async (
   return [];
 };
 
+// optional, if refresh token is required
+const generateRefreshToken = async (
+  client: Client,
+  user: User,
+  scope: string[]
+): Promise<string> => {
+  // generate refresh token
+  console.log("generateRefreshToken");
+  return "1234567890-";
+};
+
 // require all grant types
 const getClient = async (
   clientId: string,
@@ -30,7 +41,7 @@ const getClient = async (
   const client = {
     id: "0",
     redrectUris: ["http://localhost:3000"],
-    grants: ["client_credentials"],
+    grants: ["client_credentials", "password"],
   };
   console.log("getClient");
   return {
@@ -54,8 +65,18 @@ const saveToken = async (
     ...token,
     client,
     user,
-    "access_token": token.accessToken,
+    access_token: token.accessToken,
   };
+};
+
+// require for password grant type
+const getUser = async (
+  username: string,
+  password: string
+): Promise<User | undefined> => {
+  // query user information from database
+  console.log("getUser");
+  return {};
 };
 
 // require for client_credentials grant type
@@ -81,7 +102,9 @@ const getAccessToken = async (accessToken: string): Promise<Token> => {
 
 export default {
   generateAccessToken,
+  generateRefreshToken,
   getClient,
+  getUser,
   getUserFromClient,
   validateScope,
   saveToken,
