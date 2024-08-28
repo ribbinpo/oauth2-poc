@@ -1,4 +1,10 @@
-import OAuth2Server, { Client, RefreshToken, Token, User } from "@node-oauth/oauth2-server";
+import {
+  AuthorizationCode,
+  Client,
+  RefreshToken,
+  Token,
+  User,
+} from "@node-oauth/oauth2-server";
 
 // optional, default generate tokens consisting of 40 characters (a..z0..9)
 const generateAccessToken = async (
@@ -40,13 +46,18 @@ const getClient = async (
   // retrieve client information from database
   const client = {
     id: "id-1",
-    redrectUris: ["http://localhost:3000"],
-    grants: ["client_credentials", "password", "refresh_token"],
-  };
+    redirectUris: ["http://localhost:3000/callback"],
+    grants: [
+      "client_credentials",
+      "password",
+      "refresh_token",
+      "authorization_code",
+    ],
+  } as Client;
   console.log("getClient");
   return {
-    id: client.id,
-    redirectUris: client.redrectUris,
+    id: clientId,
+    redirectUris: client.redirectUris,
     grants: client.grants,
     user: {},
     // accessTokenLifetime,
@@ -121,6 +132,70 @@ const revokeToken = async (token: Token): Promise<boolean> => {
   return true;
 };
 
+const saveAuthorizationCode = async (
+  code: Pick<
+    AuthorizationCode,
+    | "authorizationCode"
+    | "expiresAt"
+    | "redirectUri"
+    | "scope"
+    | "codeChallenge"
+    | "codeChallengeMethod"
+  >,
+  client: Client,
+  user: User
+): Promise<AuthorizationCode> => {
+  // save authorization code
+  console.log("saveAuthorizationCode");
+  return {
+    authorizationCode: code.authorizationCode,
+    expiresAt: code.expiresAt,
+    redirectUri: code.redirectUri,
+    scope: code.scope,
+    codeChallenge: code.codeChallenge,
+    codeChallengeMethod: code.codeChallengeMethod,
+    client: {
+      id: "id-1",
+      grants: [],
+    },
+    user: {},
+  };
+};
+
+const getAuthorizationCode = async (authorizationCode: string) => {
+  // retrieve authorization code information from database
+  console.log("getAuthorizationCode");
+  return {
+    authorizationCode: authorizationCode,
+    expiresAt: new Date(new Date().getTime() + 60 * 60 * 24 * 1000),
+    redirectUri: "http://localhost:3000/callback",
+    scope: [],
+    codeChallenge: "",
+    codeChallengeMethod: "",
+    client: {
+      id: "id-1",
+      grants: [],
+    },
+    user: {},
+  };
+};
+
+const revokeAuthorizationCode = async (
+  code: Pick<
+    AuthorizationCode,
+    | "authorizationCode"
+    | "expiresAt"
+    | "redirectUri"
+    | "scope"
+    | "codeChallenge"
+    | "codeChallengeMethod"
+  >
+) => {
+  // revoke authorization code
+  console.log("revokeAuthorizationCode");
+  return true;
+};
+
 export default {
   generateAccessToken,
   generateRefreshToken,
@@ -132,4 +207,7 @@ export default {
   getAccessToken,
   getRefreshToken,
   revokeToken,
+  saveAuthorizationCode,
+  getAuthorizationCode,
+  revokeAuthorizationCode,
 };

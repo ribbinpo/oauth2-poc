@@ -20,11 +20,18 @@ const authorizeHandler = async (
   const request = new OAuth2Request(req);
   const response = new OAuth2Response(res);
   try {
-    const result = await oauth2.authorize(request, response, {});
+    const result = await oauth2.authorize(request, response, {
+      authenticateHandler: {
+        handle: async () => {
+          // return user
+          return { id: "1" };
+        },
+      },
+    });
     console.log("authorizeHandler: ", result);
-    next();
+    res.send(result);
   } catch (error) {
-    throw error;
+    next(error);
   }
 };
 
