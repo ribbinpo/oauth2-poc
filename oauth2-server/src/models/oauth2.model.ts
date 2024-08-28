@@ -1,4 +1,4 @@
-import OAuth2Server, { Client, Token, User } from "@node-oauth/oauth2-server";
+import OAuth2Server, { Client, RefreshToken, Token, User } from "@node-oauth/oauth2-server";
 
 // optional, default generate tokens consisting of 40 characters (a..z0..9)
 const generateAccessToken = async (
@@ -39,9 +39,9 @@ const getClient = async (
 ): Promise<Client> => {
   // retrieve client information from database
   const client = {
-    id: "0",
+    id: "id-1",
     redrectUris: ["http://localhost:3000"],
-    grants: ["client_credentials", "password"],
+    grants: ["client_credentials", "password", "refresh_token"],
   };
   console.log("getClient");
   return {
@@ -100,6 +100,27 @@ const getAccessToken = async (accessToken: string): Promise<Token> => {
   };
 };
 
+const getRefreshToken = async (refreshToken: string): Promise<RefreshToken> => {
+  // retrieve token information from database
+  console.log("getRefreshToken");
+  return {
+    refreshToken: refreshToken,
+    refreshTokenExpiresAt: new Date(new Date().getTime() + 60 * 60 * 24 * 1000),
+    scope: [],
+    client: {
+      id: "id-1",
+      grants: [],
+    },
+    user: {},
+  };
+};
+
+const revokeToken = async (token: Token): Promise<boolean> => {
+  // revoke token
+  console.log("revokeToken");
+  return true;
+};
+
 export default {
   generateAccessToken,
   generateRefreshToken,
@@ -109,4 +130,6 @@ export default {
   validateScope,
   saveToken,
   getAccessToken,
+  getRefreshToken,
+  revokeToken,
 };
