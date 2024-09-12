@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import path from "path";
 
 import exampleRouter from "./example.route";
@@ -14,11 +14,24 @@ router.get("/oauth", (req, res) => {
   res.sendFile(filePath);
 });
 
-router.post("/oauth/authorize", oauth2Middleware.authorizeHandler);
-router.post("/oauth/token", oauth2Middleware.tokenHandler);
-router.get("/test", oauth2Middleware.authenticateHandler, (req, res) => {
-  res.send("ok");
-});
+router.post(
+  "/oauth/authorize",
+  oauth2Middleware.authorizeHandler,
+  oauth2Middleware.oauth2ErrorMappingMiddleware
+);
+router.post(
+  "/oauth/token",
+  oauth2Middleware.tokenHandler,
+  oauth2Middleware.oauth2ErrorMappingMiddleware
+);
+router.get(
+  "/test",
+  oauth2Middleware.authenticateHandler,
+  oauth2Middleware.oauth2ErrorMappingMiddleware,
+  (req: Request, res: Response, next: NextFunction) => {
+    res.send("ok");
+  }
+);
 
 router.use(errorHandler);
 

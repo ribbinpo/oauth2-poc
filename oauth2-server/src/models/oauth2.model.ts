@@ -1,36 +1,48 @@
 import {
   AuthorizationCode,
   Client,
+  InvalidClientError,
   RefreshToken,
   Token,
   User,
 } from "@node-oauth/oauth2-server";
 
+import { MockClientDB, MockUserDB } from "../mocks/mockDB";
+import { UnauthorizedError } from "../utils/error.util";
+
+const randomString = (length: number): string => {
+  let text = "";
+  const possible =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  for (let i = 0; i < length; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+};
+
 // require all grant types
 const getClient = async (
   clientId: string,
-  clientSecret: string
+  clientSecret?: string
 ): Promise<Client> => {
   // retrieve client information from database by clientId and clientSecret
   console.log("getClient with clientId: ", clientId);
-  const mockClient = {
-    id: "id-1",
-    redirectUris: ["http://localhost:3000/callback"],
-    grants: [
-      "client_credentials",
-      "password",
-      "refresh_token",
-      "authorization_code",
-    ],
-  } as Client;
-  console.log("getClient");
+  const client = MockClientDB.find((client) => client.clientId === clientId);
+  if (!client) throw new InvalidClientError("Invalid client");
+  if (
+    !client.grants.includes("authorization_code") &&
+    !clientSecret &&
+    client.clientSecret !== clientSecret
+  ) {
+    throw new InvalidClientError("Invalid client secret");
+  }
   return {
     id: clientId,
-    redirectUris: mockClient.redirectUris,
-    grants: mockClient.grants,
-    user: {},
-    // accessTokenLifetime,
-    // refreshTokenLifetime
+    redirectUris: client.redirectUris,
+    grants: client.grants,
+    // user: {}, // optional
+    accessTokenLifetime: client.accessTokenLifetime,
+    refreshTokenLifetime: client.refreshTokenLifetime,
   };
 };
 
@@ -42,14 +54,12 @@ const getUser = async (
   // query user information from database by username
   // check if the password is correct
   console.log("getUser with username: ", username);
-  const mockUser = {
-    id: "id-1",
-    username: "john",
-    password: "123456",
-    firstName: "John",
-  };
-  const { password: _, ...user } = mockUser;
-  return user;
+  const user = MockUserDB.find((u) => u.username === username);
+  if (!user || user.password !== password) {
+    throw new UnauthorizedError("Unauthorized user");
+  }
+  const { password: _, ...result } = user;
+  return result;
 };
 
 // require for client_credentials grant type
@@ -80,6 +90,7 @@ const validateScope = async (
 const getAccessToken = async (accessToken: string): Promise<Token> => {
   // verify access token
   console.log("getAccessToken with accessToken: ", accessToken);
+  // throw new Error("invalid token");
   return {
     accessToken: accessToken,
     accessTokenExpiresAt: new Date(new Date().getTime() + 60 * 60 * 24 * 1000),
@@ -95,14 +106,14 @@ const getRefreshToken = async (refreshToken: string): Promise<RefreshToken> => {
   // verify refresh token and decode user information
   console.log("getRefreshToken with refreshToken: ", refreshToken);
   return {
-    refreshToken: refreshToken,
+    refreshToken: randomString(40),
     refreshTokenExpiresAt: new Date(new Date().getTime() + 60 * 60 * 24 * 1000),
     scope: [],
     client: {
-      id: "id-1",
-      grants: [],
+      id: MockClientDB[0].clientId,
+      grants: MockClientDB[0].grants,
     },
-    user: {},
+    user: MockUserDB[0],
   };
 };
 
@@ -114,7 +125,7 @@ const generateAccessToken = async (
 ): Promise<string> => {
   // generate access token
   console.log("generateAccessToken");
-  return "1234567890";
+  return randomString(40);
 };
 
 // optional, if refresh token is required
@@ -125,7 +136,7 @@ const generateRefreshToken = async (
 ): Promise<string> => {
   // generate refresh token
   console.log("generateRefreshToken");
-  return "1234567890-";
+  return randomString(40);
 };
 
 const revokeToken = async (token: Token): Promise<boolean> => {
@@ -179,7 +190,10 @@ const saveAuthorizationCode = async (
 
 const getAuthorizationCode = async (authorizationCode: string) => {
   // retrieve authorization code information from database
-  console.log("getAuthorizationCode with authorizationCode: ", authorizationCode);
+  console.log(
+    "getAuthorizationCode with authorizationCode: ",
+    authorizationCode
+  );
   return {
     authorizationCode: authorizationCode,
     expiresAt: new Date(new Date().getTime() + 60 * 60 * 24 * 1000),
@@ -187,12 +201,22 @@ const getAuthorizationCode = async (authorizationCode: string) => {
     scope: [],
     codeChallenge: "",
     codeChallengeMethod: "",
-    // client: {
-    //   id: "id-1",
-    //   grants: [],
-    // },
-    // user: {},
+    client: {
+      id: MockClientDB[0].clientId,
+      grants: MockClientDB[0].grants,
+    },
+    user: MockUserDB[0],
   };
+};
+
+const generateAuthorizationCode = async (
+  client: Client,
+  user: User,
+  scope: string[]
+): Promise<string> => {
+  // generate authorization code
+  console.log("generateAuthorizationCode");
+  return randomString(40);
 };
 
 const revokeAuthorizationCode = async (
@@ -225,4 +249,5 @@ export default {
   saveAuthorizationCode,
   getAuthorizationCode,
   revokeAuthorizationCode,
+  generateAuthorizationCode,
 };

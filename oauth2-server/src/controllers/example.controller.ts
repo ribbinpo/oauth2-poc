@@ -7,7 +7,7 @@ import { SuccessHandler } from "../utils/response.util";
 
 const getAll = async (_: Request, res: Response, next: NextFunction) => {
   try {
-    return new SuccessHandler({
+    return new SuccessHandler(200, {
       result: exampleService.getAll(),
     }).send(res);
   } catch (error) {
@@ -19,7 +19,7 @@ const createOne = async (req: Request, res: Response, next: NextFunction) => {
   const dataReq = matchedData(req) as ExampleModel;
   try {
     const exampleCreated = exampleService.createOne(dataReq);
-    return new SuccessHandler({
+    return new SuccessHandler(201, {
       statusCode: 201,
       result: exampleCreated,
       message: "Example created successfully!",
@@ -33,7 +33,7 @@ const updateOne = async (req: Request, res: Response, next: NextFunction) => {
   const dataReq = matchedData(req) as Partial<ExampleModel>;
   try {
     const exampleUpdated = exampleService.updateOne(dataReq);
-    return new SuccessHandler({
+    return new SuccessHandler(200, {
       result: exampleUpdated,
       message: "Example updated successfully!",
     }).send(res);
@@ -46,7 +46,7 @@ const deleteOne = async (req: Request, res: Response, next: NextFunction) => {
   const { id } = matchedData(req) as { id: string };
   try {
     const exampleDeleted = exampleService.deleteOne(id);
-    return new SuccessHandler({
+    return new SuccessHandler(204, {
       statusCode: 204,
       result: exampleDeleted,
       message: "Example deleted successfully!",

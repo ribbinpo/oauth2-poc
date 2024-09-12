@@ -6,15 +6,17 @@ class SuccessHandler<T> {
   result?: T;
   status = "success";
 
-  constructor({
+  constructor(
     statusCode = 200,
-    message,
-    result,
-  }: {
-    statusCode?: number;
-    message?: string;
-    result?: T;
-  }) {
+    {
+      message,
+      result,
+    }: {
+      statusCode?: number;
+      message?: string;
+      result?: T;
+    }
+  ) {
     this.statusCode = statusCode;
     this.memsage = message;
     this.result = result;
